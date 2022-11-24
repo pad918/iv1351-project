@@ -1,3 +1,3 @@
-Dump.sql is a postgreSQL dump of the database.
+dump_final.sql is a postgreSQL dump of the database.
 
 populate_data.sql populates the database with example data.
