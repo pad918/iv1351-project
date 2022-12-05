@@ -387,16 +387,16 @@ VALUES
 SELECT * FROM instructor;
 
 INSERT INTO time_slot (instructor_id) SELECT person_id FROM instructor, 
-  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.1)) AS rnd
-  WHERE instructor.person_id = floor(RANDOM()*4.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
+  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.2)) AS rnd
+  WHERE instructor.person_id = floor(RANDOM()*3.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
   ORDER BY RANDOM() ASC LIMIT 60;
 
 INSERT INTO time_slot (instructor_id) SELECT person_id FROM instructor, 
-  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.1)) AS rnd
-  WHERE instructor.person_id = floor(RANDOM()*4.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
+  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.2)) AS rnd
+  WHERE instructor.person_id = floor(RANDOM()*3.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
   ORDER BY RANDOM() DESC LIMIT 60;
 
-
+SELECT * FROM instructor;
 -- CREAT PRICEING INFORMATION:
 
 INSERT INTO price_information 
