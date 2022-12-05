@@ -99,22 +99,44 @@ INSERT INTO person (person_number, first_name, last_name, adress_id, contact_det
     -- CREATE STUDNETS
 INSERT INTO student (person_id, skill_level) 
     SELECT person.id, 'beginner' FROM person, imported 
-    WHERE person.person_number = imported.person_number AND imported.ord <= 5;
+    WHERE person.person_number = imported.person_number AND imported.ord <= 6;
 
     -- CREATE INSTRUCTORS
 INSERT INTO instructor (person_id) 
     SELECT person.id FROM person, imported 
-    WHERE person.person_number = imported.person_number AND imported.ord > 5;
+    WHERE person.person_number = imported.person_number AND imported.ord > 6;
 ------ DET FUNGERAR !!!! YEEEES!!!
 
     -- CREATE SIBLING RELATIONS:
 INSERT INTO sibling_relation (student_id1, student_id2)
-    SELECT S1.person_id, S2.person_id FROM student AS S1, student AS S2
-    WHERE NOT S1.person_id=S2.person_id ORDER BY RANDOM() LIMIT 4; --??
-INSERT INTO sibling_relation (student_id1, student_id2)
-    SELECT student_id2, student_id1 FROM sibling_relation as S3
-    WHERE NOT EXISTS (SELECT * FROM sibling_relation AS S4 WHERE
-    S3.student_id2 = S4.student_id1 AND S3.student_id1 = S4.student_id2); --??
+    VALUES 
+    (
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Serina'),
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Baxter')
+    ),
+    (
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Serina'),
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Sacha')
+    ),
+    (
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Sacha'),
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Baxter')
+    ),
+    (
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Paula'),
+      (SELECT person_id FROM person LEFT JOIN student ON person.id=student.person_id WHERE first_name='Tiger')
+    );
+
+INSERT INTO sibling_relation (student_id2, student_id1)
+    SELECT S1.person_id, S2.person_id FROM student AS S1, student AS S2, sibling_relation
+    WHERE sibling_relation.student_id1=S1.person_id AND sibling_relation.student_id2=S2.person_id
+    AND NOT EXISTS (SELECT * FROM sibling_relation AS SR 
+          WHERE SR.student_id1=S2.person_id AND SR.student_id2=S1.person_id) ;
+
+--INSERT INTO sibling_relation (student_id1, student_id2)
+--    SELECT student_id2, student_id1 FROM sibling_relation as S3
+--    WHERE NOT EXISTS (SELECT * FROM sibling_relation AS S4 WHERE
+--    S3.student_id2 = S4.student_id1 AND S3.student_id1 = S4.student_id2); --??
             -- YYYEEEEEES FUNGERAR NU!!!
 
     -- CERATE A CLASSROOM
@@ -319,16 +341,61 @@ VALUES
   ('2022-01-17',1,'piano','intermediate','8:53','15:46'),
   ('2021-01-09',2,'piano','advanced','11:58','14:12'),
   ('2020-10-23',2,'guitar','advanced','8:36','14:34');
+INSERT INTO imported_lessons (date,type,instrument,level,start_time,end_time)
+VALUES
+  ('2022-12-16',2,'violin','intermediate','9:04','12:12'),
+  ('2022-12-14',2,'piano','advanced','9:43','17:30'),
+  ('2022-12-12',1,'guitar','advanced','8:01','17:45'),
+  ('2022-12-16',0,'violin','intermediate','10:43','17:42'),
+  ('2022-12-13',1,'violin','advanced','9:40','17:32'),
+  ('2022-12-14',1,'violin','advanced','9:00','15:43'),
+  ('2022-12-16',2,'guitar','beginner','8:25','18:52'),
+  ('2022-12-13',1,'violin','beginner','9:04','18:22'),
+  ('2022-12-14',1,'guitar','advanced','11:30','16:24'),
+  ('2022-12-15',1,'violin','intermediate','11:50','16:50');
+INSERT INTO imported_lessons (date,type,instrument,level,start_time,end_time)
+VALUES
+  ('2022-12-16',1,'piano','intermediate','10:18','14:13'),
+  ('2022-12-16',2,'guitar','intermediate','8:33','17:11'),
+  ('2022-12-14',1,'violin','advanced','10:38','16:49'),
+  ('2022-12-16',1,'violin','beginner','9:25','18:43'),
+  ('2022-12-16',0,'violin','beginner','8:13','14:12'),
+  ('2022-12-15',2,'guitar','beginner','9:29','15:43'),
+  ('2022-12-15',0,'guitar','beginner','9:52','18:32'),
+  ('2022-12-15',0,'piano','beginner','10:15','16:45'),
+  ('2022-12-12',1,'piano','advanced','9:07','17:53'),
+  ('2022-12-16',0,'piano','intermediate','10:12','16:41');
+
+
 
 -- CLASSROOM LESSON RELATION???
 -- CREATE CLASSROOM-LESSON
     --INSERT INTO classroom_lesson (lesson_id, classroom_id) 
     --      SELECT lesson.id, classroom.id FROM lesson, classroom;
 
+--Buckminster','Owens','09418','Ap #739-2821 Suspendisse Ave','84','579775470614','sollicitudin.a.malesuada@google.ca','066-103-2764',7),
+--  ('Kuame','Harrington','13446','4353 Et Rd.','21','107371896159','et.netus@icloud.ca','063-338-6212',8),
+--  ('Judith','Bowen','31068','142-2528 Purus Avenue','55','444734773476','nisi.aenean@outlook.couk','003-111-9873',9),
+--  ('Berk'
+--
+--
+--
+
+
 -- CREATE TIME SLOTS FOR LESSONS!!!
-INSERT INTO time_slot (instructor_id) SELECT 
-      (SELECT person_id FROM instructor ORDER BY RANDOM() LIMIT 1)
-      FROM imported_lessons;
+
+SELECT * FROM instructor;
+
+INSERT INTO time_slot (instructor_id) SELECT person_id FROM instructor, 
+  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.1)) AS rnd
+  WHERE instructor.person_id = floor(RANDOM()*4.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
+  ORDER BY RANDOM() ASC LIMIT 60;
+
+INSERT INTO time_slot (instructor_id) SELECT person_id FROM instructor, 
+  (SELECT date FROM imported_lessons) AS lim, (SELECT SETSEED(0.1)) AS rnd
+  WHERE instructor.person_id = floor(RANDOM()*4.0)+(SELECT person_id FROM instructor ORDER BY person_id ASC LIMIT 1)
+  ORDER BY RANDOM() DESC LIMIT 60;
+
 
 -- CREAT PRICEING INFORMATION:
 
@@ -463,7 +530,7 @@ INSERT INTO ensemble_lesson (scheduled_lesson_id, genre)
 -- CREATE SOM STUDENT_LESSON RELATIONS (ALL STUDENTS TO ALL scheduled lessons!)
 INSERT INTO student_lesson (student_id, lesson_id)
     SELECT student.person_id, lesson.id  
-      FROM student, lesson ORDER BY RANDOM() LIMIT 300;
+      FROM student, lesson, (SELECT SETSEED(0.7)) AS RND ORDER BY RANDOM() LIMIT 340;
 
 
 -- EXAMPLE
