@@ -463,7 +463,7 @@ INSERT  INTO lesson (skill_level, lesson_date, start_time, end_time, student_pri
             (
               SELECT *, ROW_NUMBER() OVER (ORDER BY date) AS r_num  FROM imported_lessons
             )imported_lessons
-          LEFT JOIN
+          JOIN
           (
             SELECT *, ROW_NUMBER() OVER (ORDER BY id) AS r_num  FROM time_slot
           )time_slot
@@ -530,8 +530,35 @@ INSERT INTO ensemble_lesson (scheduled_lesson_id, genre)
 -- CREATE SOM STUDENT_LESSON RELATIONS (ALL STUDENTS TO ALL scheduled lessons!)
 INSERT INTO student_lesson (student_id, lesson_id)
     SELECT student.person_id, lesson.id  
-      FROM student, lesson, (SELECT SETSEED(0.7)) AS RND ORDER BY RANDOM() LIMIT 340;
+      FROM student, lesson, (SELECT SETSEED(0.7)) AS RND 
+        WHERE NOT EXISTS(
+          SELECT * FROM individual_lesson 
+          WHERE individual_lesson.lesson_id=lesson.id
+          )
+      ORDER BY RANDOM() LIMIT 340;
 
+-- Create some lesson realtions for individual lessons
+INSERT INTO student_lesson (student_id, lesson_id)
+    SELECT selection.person_id, selection.lesson_id  
+      FROM 
+      (
+        SELECT person_id, lesson_id FROM
+        (SELECT ROW_NUMBER() OVER (ORDER BY lesson_id) AS rn, lesson_id FROM individual_lesson) AS A
+        ,
+        (SELECT person_id, ROW_NUMBER() OVER (ORDER BY RANDOM()) as rn, lesson.id FROM student, lesson LIMIT 100) AS B 
+        WHERE A.rn=B.rn 
+      ) AS selection;
+
+DELETE FROM lesson 
+  WHERE NOT (EXISTS 
+    (SELECT * FROM 
+       scheduled_lesson WHERE id=scheduled_lesson.lesson_id
+    ) 
+    OR 
+    EXISTS (
+  SELECT * FROM individual_lesson WHERE
+    id=individual_lesson.lesson_id
+));
 
 -- EXAMPLE
 --  CALCULATE TOTAL PRICE FOR EVERY STUDENT
